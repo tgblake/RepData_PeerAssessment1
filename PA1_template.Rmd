@@ -62,7 +62,6 @@ The number of the interval, out of `r intervalsPerDay`, with the most steps aver
 
 ## Imputing missing values
 
-
 Number of missing ("NA") intervals:
 ```{r}
 stepsNA <- steps[steps=="NA"]
@@ -130,5 +129,5 @@ stepsPerWeekday <- stepsWeekday / nWeekdays
 #nWeekendDays
 stepsPerWeekendDay <- stepsWeekendDay / nWeekendDays
 ```
-There were `r stepsPerWeekday` steps per weekday, and 
-`r stepsPerWeekendDay` steps per weekend day.
+There were `r stepsPerWeekday` average steps per weekday, and 
+`r stepsPerWeekendDay` average steps per weekend day.
