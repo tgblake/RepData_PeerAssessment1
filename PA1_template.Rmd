@@ -8,18 +8,127 @@ output:
 
 ## Loading and preprocessing the data
 
+```{r}
+activity <- read.csv("activity.csv")
+attach(activity)
+summary(activity)
+str(activity)
+```
 
 
 ## What is mean total number of steps taken per day?
 
+```{r}
+#sum(steps, na.rm=TRUE)
+stepsPerDay <- tapply(steps, date, sum)
+hist(stepsPerDay, breaks=30)
+```
+The mean steps per day is:
+```{r}
+meanPerDay <- mean(stepsPerDay, na.rm=TRUE)
+meanPerDay
+```
+The median steps per day is:
+```{r}
+medianPerDay <- median(stepsPerDay, na.rm=TRUE)
+medianPerDay
+#plot(meanPer5min ~ intervals, type="l")
+```
 
 
 ## What is the average daily activity pattern?
 
+Each day is divided into 5-minute intervals.  
+```{r}
+intervals <- factor(interval)
+intervalsPerDay <- length(levels(intervals))
+meanPer5min <- tapply(steps, intervals, mean, na.rm=TRUE)
+plot(levels(intervals), meanPer5min, type="l")
+```
+```{r}
+maxPer5min <- max(meanPer5min)
+```
+Max steps per 5-min interval: `r maxPer5min`
+```{r}
+max5min <- 0
+for (i in 1:nrow(meanPer5min)) {
+      if (meanPer5min[i] == maxPer5min) {
+            max5min <- i
+      }
+}
+```
+The number of the interval, out of `r intervalsPerDay`, with the most steps averaged over all days is `r max5min`.
 
 
 ## Imputing missing values
 
 
+Number of missing ("NA") intervals:
+```{r}
+stepsNA <- steps[steps=="NA"]
+length(stepsNA)
+```
+
+```{r}
+stepsImputed <- steps
+stepsWeekday <- 0
+stepsWeekendDay <- 0
+
+stepsImputedNAi <- 0
+for (i in 1:length(steps)) {
+      if (is.na(steps[i])) {
+            # Deal with steps that were all NA:
+            if (is.na(meanPer5min[i])) {
+                  meanPer5min[i] <- stepsImputed[i-1]
+            }
+            stepsImputed[i] <- meanPer5min[i]
+      }
+      if (is.na(stepsImputed[i]) && stepsImputedNAi == 0) {
+            stepsImputedNAi <- i
+      }
+      if (!grepl('^S',weekdays(as.Date(date[i])))) {
+            stepsWeekday <- stepsWeekday + stepsImputed[i]
+      } 
+      else {
+            stepsWeekendDay <- stepsWeekendDay + stepsImputed[i]
+      }
+}
+stepsImputedNAi
+```
+
+```{r}
+stepsImputedPerDay <- tapply(stepsImputed, date, sum)
+hist(stepsImputedPerDay, breaks=30)
+```
+
+```{r}
+meanImputedPerDay <- mean(stepsImputedPerDay, na.rm=TRUE)
+medianImputedPerDay <- median(stepsImputedPerDay, na.rm=TRUE)
+```
+The mean imputed steps per day is: `r meanImputedPerDay`
+
+The median imputed steps per day is: `r medianImputedPerDay`
+
 
 ## Are there differences in activity patterns between weekdays and weekends?
+```{r}
+# Find numbers of weekday and weekend days in 'dates':
+dates <- levels(date)
+nWeekendDays <- 0
+for (d in dates) {
+      if (grepl('^S',weekdays(as.Date(d)))) {
+            nWeekendDays <- nWeekendDays + 1
+      }
+}
+nWeekdays <- length(dates) - nWeekendDays
+
+#stepsWeekday
+#nWeekdays
+stepsPerWeekday <- stepsWeekday / nWeekdays
+
+#stepsWeekendDay
+#nWeekendDays
+stepsPerWeekendDay <- stepsWeekendDay / nWeekendDays
+```
+There were `r stepsPerWeekday` steps per weekday, and 
+`r stepsPerWeekendDay` steps per weekend day.
